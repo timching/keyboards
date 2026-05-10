@@ -2,7 +2,9 @@
 """
 Render a QMK keymap JSON to one SVG per layer.
 
-Usage: ./render_keymap.py <keymap.json> <out_dir>
+Usage: ./render_keymap.py <keymap.json> <keymap_dir>
+
+Writes <keymap_dir>/layers/layer_NN_*.svg and <keymap_dir>/layers.md (index).
 
 Designed as a training reference. Single unified style for any key that's
 mapped on the layer; KC_TRNS / KC_NO fade into the bezel so the eye skips
@@ -207,8 +209,10 @@ def parse_layer_names(notes: str) -> dict[int, str]:
     return names
 
 
-def render_index_md(keyboard: str, keymap: str, generated: list[tuple[int, str, str]]) -> str:
-    """Build a README.md that embeds every layer SVG for browsing on GitHub."""
+def render_index_md(keyboard: str, keymap: str,
+                    generated: list[tuple[int, str, str]],
+                    img_subdir: str) -> str:
+    """Build the markdown index that embeds every layer SVG for browsing on GitHub."""
     lines = [
         f"# {keyboard} — `{keymap}`",
         "",
@@ -223,16 +227,17 @@ def render_index_md(keyboard: str, keymap: str, generated: list[tuple[int, str, 
     ]
     for i, name, fname in generated:
         title = f"Layer {i}" + (f" — {name}" if name else "")
-        lines += [f"## {title}", "", f"![{title}]({fname})", ""]
+        lines += [f"## {title}", "", f"![{title}]({img_subdir}/{fname})", ""]
     return "\n".join(lines)
 
 
 def main():
     if len(sys.argv) != 3:
-        sys.exit("usage: render_keymap.py <keymap.json> <out_dir>")
+        sys.exit("usage: render_keymap.py <keymap.json> <keymap_dir>")
     src = Path(sys.argv[1])
-    out_dir = Path(sys.argv[2])
-    out_dir.mkdir(parents=True, exist_ok=True)
+    keymap_dir = Path(sys.argv[2])
+    layers_dir = keymap_dir / "layers"
+    layers_dir.mkdir(parents=True, exist_ok=True)
 
     data = json.loads(src.read_text())
     layer_names = parse_layer_names(data.get("notes", ""))
@@ -242,12 +247,13 @@ def main():
         name = layer_names.get(i, "")
         slug = re.sub(r"[^\w-]+", "_", name).strip("_").lower()
         fname = f"layer_{i:02d}" + (f"_{slug}" if slug else "") + ".svg"
-        (out_dir / fname).write_text(render_layer(layer, i, name))
+        (layers_dir / fname).write_text(render_layer(layer, i, name))
         generated.append((i, name, fname))
-        print(f"-> {out_dir / fname}")
+        print(f"-> {layers_dir / fname}")
 
-    index = out_dir / "README.md"
-    index.write_text(render_index_md(data.get("keyboard", ""), data.get("keymap", ""), generated))
+    index = keymap_dir / "layers.md"
+    index.write_text(render_index_md(
+        data.get("keyboard", ""), data.get("keymap", ""), generated, "layers"))
     print(f"-> {index}")
 
 
