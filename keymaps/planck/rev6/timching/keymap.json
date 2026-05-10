@@ -3,7 +3,7 @@
   "notes": "Layers: 0 QWERTY | 1 Colemak | 2 numbers+right-symbols (MO2) | 3 symbols (MO3) | 4 fn (MO4) | 5 spare | 6 transfer/empty (MO6) | 7 transfer-to-light (MO7) | 8-14 spare | 15 light/RGB. From layer 7, bottom-left key = TO(15). From layer 15, all four corners = TO(0).",
   "version": 1,
   "keyboard": "planck/rev6_drop",
-  "keymap": "timching_planck_rev6_drop",
+  "keymap": "timching",
   "layout": "LAYOUT_ortho_4x12",
   "layers": [
     [
